@@ -1,0 +1,13 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Health {
+  env: String!
+  ok: Boolean!
+  uptime: Float!
+}
+
+type Query {
+  health: Health!
+}

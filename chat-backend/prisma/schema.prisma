@@ -1,0 +1,146 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ConversationType {
+  DM
+  GROUP
+}
+
+enum MembershipRole {
+  MEMBER
+  ADMIN
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  SYSTEM
+}
+
+enum DeliveryState {
+  SENT
+  DELIVERED
+  READ
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  username     String    @unique
+  name         String?
+  avatarUrl    String?
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  lastSeenAt   DateTime?
+
+  memberships  Membership[]
+  messages     Message[]       @relation("UserMessages")
+  reactions    Reaction[]
+  messageStats MessageStatus[]
+
+  @@index([email])
+  @@index([username])
+}
+
+model Conversation {
+  id        String           @id @default(cuid())
+  type      ConversationType
+  title     String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  /**
+   * Optional: store a deterministic key for a DM (e.g., "userA:userB")
+   * to prevent duplicate DMs. Only set for type=DM.
+   */
+  dmKey String? @unique
+
+  memberships Membership[]
+  messages    Message[]
+
+  @@index([type, updatedAt])
+}
+
+model Membership {
+  conversationId String
+  userId         String
+  role           MembershipRole @default(MEMBER)
+  joinedAt       DateTime       @default(now())
+  lastReadAt     DateTime?
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id             String      @id @default(cuid())
+  conversationId String
+  senderId       String
+  type           MessageType @default(TEXT)
+  content        String
+  replyToId      String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  editedAt       DateTime?
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation("UserMessages", fields: [senderId], references: [id], onDelete: Restrict)
+  replyTo      Message?     @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies      Message[]    @relation("MessageReplies")
+
+  reactions Reaction[]
+  statuses  MessageStatus[]
+
+  @@index([conversationId, createdAt])
+  @@index([senderId, createdAt])
+}
+
+model Reaction {
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([messageId, userId, emoji])
+  @@index([messageId])
+}
+
+model MessageStatus {
+  messageId String
+  userId    String
+
+  /**
+   * Derived state — you can compute from timestamps,
+   * but we keep an enum for easy querying.
+   */
+  state       DeliveryState @default(SENT)
+  sentAt      DateTime      @default(now())
+  deliveredAt DateTime?
+  readAt      DateTime?
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([messageId, userId])
+  @@index([userId])
+  @@index([state])
+}

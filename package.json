@@ -18,24 +18,11 @@
     "@typescript-eslint/parser": "^8.42.0",
     "eslint": "^9.34.0",
     "globals": "^16.3.0",
-    "husky": "^9.1.7",
-    "lint-staged": "^16.1.6",
     "prettier": "^3.6.2"
   },
   "private": true,
   "workspaces": [
     "chat-backend",
     "chat-frontend"
-  ],
-  "lint-staged": {
-    "chat-backend/**/*.{ts,tsx,js,jsx}": [
-      "pnpm --filter ./chat-backend exec eslint --fix --max-warnings=0 \"src/**/*.{ts,tsx,js,jsx}\" --"
-    ],
-    "chat-frontend/**/*.{ts,tsx,js,jsx}": [
-      "pnpm --filter ./chat-frontend exec next lint --dir src --fix --"
-    ],
-    "**/*.{md,json,css,scss,html,yml,yaml}": [
-      "prettier --write"
-    ]
-  }
+  ]
 }
