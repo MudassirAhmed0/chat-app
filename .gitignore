@@ -1,0 +1,20 @@
+﻿ 
+
+# dependencies
+node_modules
+.pnpm-store
+pnpm-lock.yaml
+
+# build outputs
+dist
+.next
+out
+coverage
+
+# env files
+.env
+.env.local
+
+# misc
+.DS_Store
+*.log
