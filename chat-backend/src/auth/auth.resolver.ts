@@ -1,4 +1,11 @@
-import { Args, Mutation, ObjectType, Field, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Mutation,
+  ObjectType,
+  Field,
+  Resolver,
+  Query,
+} from '@nestjs/graphql';
 import { AuthService } from './auth.service';
 import { CreateUserInput } from '../users/dto/create-user.input';
 import { LoginInput } from './dto/login.input';
@@ -19,6 +26,7 @@ class AuthPayload {
 export class AuthResolver {
   constructor(private readonly auth: AuthService) {}
 
+  @Query(() => String, { name: 'ping' })
   @Mutation(() => AuthPayload)
   async register(@Args('input') input: CreateUserInput): Promise<AuthPayload> {
     return this.auth.register(input);
