@@ -36,15 +36,16 @@ enum DeliveryState {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  username     String    @unique
-  name         String?
-  avatarUrl    String?
-  passwordHash String
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  lastSeenAt   DateTime?
+  id               String    @id @default(cuid())
+  email            String    @unique
+  username         String    @unique
+  name             String?
+  avatarUrl        String?
+  passwordHash     String
+  refreshTokenHash String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  lastSeenAt       DateTime?
 
   memberships  Membership[]
   messages     Message[]       @relation("UserMessages")
