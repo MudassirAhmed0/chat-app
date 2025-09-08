@@ -2,6 +2,11 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+input AddReactionInput {
+  emoji: String!
+  messageId: ID!
+}
+
 type AuthPayload {
   tokens: AuthTokenModel!
   user: UserModel!
@@ -10,6 +15,32 @@ type AuthPayload {
 type AuthTokenModel {
   accessToken: String!
   refreshToken: String!
+}
+
+type Conversation {
+  createdAt: DateTime!
+  id: ID!
+  participants: [UserSlim!]!
+  title: String
+  type: ConversationType!
+  updatedAt: DateTime!
+}
+
+type ConversationPage {
+  items: [Conversation!]!
+  pageInfo: PageInfo!
+}
+
+"""Conversation type (DM or GROUP)"""
+enum ConversationType {
+  DM
+  GROUP
+}
+
+input CreateConversationInput {
+  membersId: [ID!]!
+  title: String
+  type: ConversationType!
 }
 
 input CreateUserInput {
@@ -24,20 +55,90 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+input ListConversationsArgs {
+  cursor: String
+  take: Int! = 20
+}
+
+input ListMessagesArgs {
+  conversationId: ID!
+  cursor: String
+  take: Int! = 30
+}
+
 input LoginInput {
   email: String!
   password: String!
 }
 
+input MarkReadInput {
+  conversationId: ID!
+  messageId: ID!
+}
+
+type MessageModel {
+  content: String!
+  conversationId: String!
+  createdAt: DateTime!
+  id: ID!
+  reactions: [ReactionModel!]!
+  sender: UserModel!
+  senderId: String!
+  type: MessageType!
+  updatedAt: DateTime!
+}
+
+type MessagePage {
+  items: [MessageModel!]!
+  pageInfo: PageInfo!
+}
+
+enum MessageType {
+  IMAGE
+  SYSTEM
+  TEXT
+}
+
 type Mutation {
+  addReaction(input: AddReactionInput!): ReactionModel!
+  createConversation(input: CreateConversationInput!): Conversation!
   login(input: LoginInput!): AuthPayload!
   logout: Boolean!
+  markRead(input: MarkReadInput!): Boolean!
   refreshTokens: AuthTokenModel!
   register(input: CreateUserInput!): AuthPayload!
+  removeReaction(input: RemoveReactionInput!): Boolean!
+  sendMessage(input: SendMessageInput!): MessageModel!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  nextCursor: String
 }
 
 type Query {
+  listConversations(args: ListConversationsArgs): ConversationPage!
+  listMessages(args: ListMessagesArgs!): MessagePage!
   ping(input: CreateUserInput!): String!
+}
+
+type ReactionModel {
+  createdAt: DateTime!
+  emoji: String!
+  user: UserModel!
+  userId: ID!
+}
+
+input RemoveReactionInput {
+  emoji: String!
+  messageId: ID!
+}
+
+input SendMessageInput {
+  content: String!
+  conversationId: ID!
+  replyToId: ID
+  type: MessageType! = TEXT
 }
 
 type UserModel {
@@ -47,5 +148,13 @@ type UserModel {
   id: ID!
   name: String
   updatedAt: DateTime!
+  username: String!
+}
+
+type UserSlim {
+  avatarUrl: String
+  email: String!
+  id: ID!
+  name: String
   username: String!
 }
