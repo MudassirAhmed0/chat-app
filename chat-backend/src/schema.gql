@@ -126,7 +126,7 @@ type Query {
   health: Health!
   listConversations(args: ListConversationsArgs): ConversationPage!
   listMessages(args: ListMessagesArgs!): MessagePage!
-  ping(input: CreateUserInput!): String!
+  ping: String!
 }
 
 type ReactionModel {

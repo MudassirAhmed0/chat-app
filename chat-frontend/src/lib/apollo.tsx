@@ -2,7 +2,7 @@ import { useAuthStore } from '@/store/auth';
 import { InMemoryCache } from '@apollo/client';
 import { ApolloClient, split } from '@apollo/client';
 import { HttpLink } from '@apollo/client';
-import { SetContextLink } from '@apollo/client/link/context';
+import { setContext } from '@apollo/client/link/context';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { ApolloProvider } from '@apollo/client/react';
 import { getMainDefinition } from '@apollo/client/utilities';
@@ -15,11 +15,11 @@ const wsUri = process.env.NEXT_PUBLIC_WS_URL!;
 const makeClient = (getToken: () => string | null) => {
   const httpLink = new HttpLink({ uri: httpUri, credentials: 'include' });
 
-  const authLink = new SetContextLink((prevContext, operation) => {
+  const authLink = setContext((_, { headers }: { headers?: Record<string, string> }) => {
     const token = getToken();
     return {
       headers: {
-        ...prevContext.headers,
+        ...(headers ?? {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     };

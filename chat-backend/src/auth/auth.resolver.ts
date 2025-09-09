@@ -27,6 +27,9 @@ export class AuthResolver {
   constructor(private readonly auth: AuthService) {}
 
   @Query(() => String, { name: 'ping' })
+  ping() {
+    return 'pong';
+  }
   @Mutation(() => AuthPayload)
   async register(@Args('input') input: CreateUserInput): Promise<AuthPayload> {
     return this.auth.register(input);

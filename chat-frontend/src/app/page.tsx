@@ -1,27 +1,9 @@
 'use client';
 
-import { gql } from '@apollo/client';
-import { useQuery } from '@apollo/client/react';
+import { useHealthQuery } from '@/gql/graphql';
 
-const HEALTH = gql`
-  query Health {
-    health {
-      ok
-      uptime
-      env
-    }
-  }
-`;
-
-type HealthQuery = {
-  health: {
-    ok: boolean;
-    uptime: number;
-    env: string;
-  };
-};
 export default function HomePage() {
-  const { data, loading, error } = useQuery<HealthQuery>(HEALTH);
+  const { data, loading, error } = useHealthQuery();
   return (
     <main className="container py-20">
       <h1 className="text-3xl font-bold mb-4">Chat App</h1>
