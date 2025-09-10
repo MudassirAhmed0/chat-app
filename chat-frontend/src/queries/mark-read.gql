@@ -1,0 +1,3 @@
+mutation MarkRead($input: MarkReadInput!) {
+  markRead(input: $input)
+}

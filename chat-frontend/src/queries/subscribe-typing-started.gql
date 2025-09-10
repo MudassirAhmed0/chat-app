@@ -1,0 +1,7 @@
+subscription OnTypingStarted($conversationId: ID!) {
+  typingStarted(conversationId: $conversationId) {
+    conversationId
+    userId
+    at
+  }
+}

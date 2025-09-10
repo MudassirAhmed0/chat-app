@@ -51,7 +51,7 @@ export type ConversationPage = {
   pageInfo: PageInfo;
 };
 
-/** Conversation type (DM or GROUP) */
+/** Conversation type ( DM, GROUP) */
 export enum ConversationType {
   Dm = 'DM',
   Group = 'GROUP'
@@ -123,6 +123,21 @@ export enum MessageType {
   Text = 'TEXT'
 }
 
+export type MessageUpdated = {
+  __typename?: 'MessageUpdated';
+  conversationId: Scalars['ID']['output'];
+  emoji?: Maybe<Scalars['String']['output']>;
+  kind: MessageUpdatedKind;
+  messageId: Scalars['ID']['output'];
+  userId?: Maybe<Scalars['String']['output']>;
+};
+
+export enum MessageUpdatedKind {
+  ReactionAdded = 'REACTION_ADDED',
+  ReactionRemoved = 'REACTION_REMOVED',
+  Read = 'READ'
+}
+
 export type Mutation = {
   __typename?: 'Mutation';
   addReaction: ReactionModel;
@@ -134,6 +149,7 @@ export type Mutation = {
   register: AuthPayload;
   removeReaction: Scalars['Boolean']['output'];
   sendMessage: MessageModel;
+  sendTyping: Scalars['Boolean']['output'];
 };
 
 
@@ -169,6 +185,11 @@ export type MutationRemoveReactionArgs = {
 
 export type MutationSendMessageArgs = {
   input: SendMessageInput;
+};
+
+
+export type MutationSendTypingArgs = {
+  conversationId: Scalars['ID']['input'];
 };
 
 export type PageInfo = {
@@ -215,6 +236,35 @@ export type SendMessageInput = {
   type?: MessageType;
 };
 
+export type Subscription = {
+  __typename?: 'Subscription';
+  messageAdded: MessageModel;
+  messageUpdated: MessageUpdated;
+  typingStarted: TypingPayload;
+};
+
+
+export type SubscriptionMessageAddedArgs = {
+  conversationId: Scalars['ID']['input'];
+};
+
+
+export type SubscriptionMessageUpdatedArgs = {
+  conversationId: Scalars['ID']['input'];
+};
+
+
+export type SubscriptionTypingStartedArgs = {
+  conversationId: Scalars['ID']['input'];
+};
+
+export type TypingPayload = {
+  __typename?: 'TypingPayload';
+  at: Scalars['DateTime']['output'];
+  conversationId: Scalars['ID']['output'];
+  userId: Scalars['ID']['output'];
+};
+
 export type UserModel = {
   __typename?: 'UserModel';
   avatarUrl?: Maybe<Scalars['String']['output']>;
@@ -258,6 +308,84 @@ export type RegisterMutationVariables = Exact<{
 
 
 export type RegisterMutation = { __typename?: 'Mutation', register: { __typename?: 'AuthPayload', user: { __typename?: 'UserModel', id: string, email: string, username: string }, tokens: { __typename?: 'AuthTokenModel', accessToken: string, refreshToken: string } } };
+
+export type AddReactionMutationVariables = Exact<{
+  input: AddReactionInput;
+}>;
+
+
+export type AddReactionMutation = { __typename?: 'Mutation', addReaction: { __typename?: 'ReactionModel', emoji: string, userId: string, user: { __typename?: 'UserModel', username: string } } };
+
+export type CreateConversationMutationVariables = Exact<{
+  input: CreateConversationInput;
+}>;
+
+
+export type CreateConversationMutation = { __typename?: 'Mutation', createConversation: { __typename?: 'Conversation', id: string, type: ConversationType, title?: string | null, updatedAt: any, participants: Array<{ __typename?: 'UserSlim', id: string, username: string }> } };
+
+export type ListConversationsQueryVariables = Exact<{
+  cursor?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type ListConversationsQuery = { __typename?: 'Query', listConversations: { __typename?: 'ConversationPage', items: Array<{ __typename?: 'Conversation', id: string, type: ConversationType, title?: string | null, updatedAt: any, participants: Array<{ __typename?: 'UserSlim', id: string, username: string }> }>, pageInfo: { __typename?: 'PageInfo', nextCursor?: string | null, hasNextPage: boolean } } };
+
+export type ListMessagesQueryVariables = Exact<{
+  conversationId: Scalars['ID']['input'];
+  cursor?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type ListMessagesQuery = { __typename?: 'Query', listMessages: { __typename?: 'MessagePage', items: Array<{ __typename?: 'MessageModel', id: string, conversationId: string, content: string, type: MessageType, createdAt: any, sender: { __typename?: 'UserModel', id: string, username: string }, reactions: Array<{ __typename?: 'ReactionModel', emoji: string, userId: string, user: { __typename?: 'UserModel', username: string } }> }>, pageInfo: { __typename?: 'PageInfo', nextCursor?: string | null, hasNextPage: boolean } } };
+
+export type RemoveReactionMutationVariables = Exact<{
+  input: RemoveReactionInput;
+}>;
+
+
+export type RemoveReactionMutation = { __typename?: 'Mutation', removeReaction: boolean };
+
+export type SendMessageMutationVariables = Exact<{
+  input: SendMessageInput;
+}>;
+
+
+export type SendMessageMutation = { __typename?: 'Mutation', sendMessage: { __typename?: 'MessageModel', id: string, conversationId: string, content: string, type: MessageType, createdAt: any, sender: { __typename?: 'UserModel', id: string, username: string }, reactions: Array<{ __typename?: 'ReactionModel', emoji: string, userId: string, user: { __typename?: 'UserModel', username: string } }> } };
+
+export type SendTypingMutationVariables = Exact<{
+  conversationId: Scalars['ID']['input'];
+}>;
+
+
+export type SendTypingMutation = { __typename?: 'Mutation', sendTyping: boolean };
+
+export type OnMessageAddedSubscriptionVariables = Exact<{
+  conversationId: Scalars['ID']['input'];
+}>;
+
+
+export type OnMessageAddedSubscription = { __typename?: 'Subscription', messageAdded: { __typename?: 'MessageModel', id: string, conversationId: string, content: string, type: MessageType, createdAt: any, sender: { __typename?: 'UserModel', id: string, username: string }, reactions: Array<{ __typename?: 'ReactionModel', emoji: string, userId: string, user: { __typename?: 'UserModel', username: string } }> } };
+
+export type OnMessageUpdatedSubscriptionVariables = Exact<{
+  conversationId: Scalars['ID']['input'];
+}>;
+
+
+export type OnMessageUpdatedSubscription = { __typename?: 'Subscription', messageUpdated: { __typename?: 'MessageUpdated', conversationId: string, messageId: string, kind: MessageUpdatedKind, emoji?: string | null, userId?: string | null } };
+
+export type OnTypingStartedSubscriptionVariables = Exact<{
+  conversationId: Scalars['ID']['input'];
+}>;
+
+
+export type OnTypingStartedSubscription = { __typename?: 'Subscription', typingStarted: { __typename?: 'TypingPayload', conversationId: string, userId: string, at: any } };
+
+export type MarkReadMutationVariables = Exact<{
+  input: MarkReadInput;
+}>;
+
+
+export type MarkReadMutation = { __typename?: 'Mutation', markRead: boolean };
 
 
 export const ListDocument = gql`
@@ -434,3 +562,447 @@ export function useRegisterMutation(baseOptions?: Apollo.MutationHookOptions<Reg
 export type RegisterMutationHookResult = ReturnType<typeof useRegisterMutation>;
 export type RegisterMutationResult = Apollo.MutationResult<RegisterMutation>;
 export type RegisterMutationOptions = Apollo.BaseMutationOptions<RegisterMutation, RegisterMutationVariables>;
+export const AddReactionDocument = gql`
+    mutation AddReaction($input: AddReactionInput!) {
+  addReaction(input: $input) {
+    emoji
+    userId
+    user {
+      username
+    }
+  }
+}
+    `;
+export type AddReactionMutationFn = Apollo.MutationFunction<AddReactionMutation, AddReactionMutationVariables>;
+
+/**
+ * __useAddReactionMutation__
+ *
+ * To run a mutation, you first call `useAddReactionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddReactionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addReactionMutation, { data, loading, error }] = useAddReactionMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useAddReactionMutation(baseOptions?: Apollo.MutationHookOptions<AddReactionMutation, AddReactionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddReactionMutation, AddReactionMutationVariables>(AddReactionDocument, options);
+      }
+export type AddReactionMutationHookResult = ReturnType<typeof useAddReactionMutation>;
+export type AddReactionMutationResult = Apollo.MutationResult<AddReactionMutation>;
+export type AddReactionMutationOptions = Apollo.BaseMutationOptions<AddReactionMutation, AddReactionMutationVariables>;
+export const CreateConversationDocument = gql`
+    mutation CreateConversation($input: CreateConversationInput!) {
+  createConversation(input: $input) {
+    id
+    type
+    title
+    updatedAt
+    participants {
+      id
+      username
+    }
+  }
+}
+    `;
+export type CreateConversationMutationFn = Apollo.MutationFunction<CreateConversationMutation, CreateConversationMutationVariables>;
+
+/**
+ * __useCreateConversationMutation__
+ *
+ * To run a mutation, you first call `useCreateConversationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateConversationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createConversationMutation, { data, loading, error }] = useCreateConversationMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateConversationMutation(baseOptions?: Apollo.MutationHookOptions<CreateConversationMutation, CreateConversationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateConversationMutation, CreateConversationMutationVariables>(CreateConversationDocument, options);
+      }
+export type CreateConversationMutationHookResult = ReturnType<typeof useCreateConversationMutation>;
+export type CreateConversationMutationResult = Apollo.MutationResult<CreateConversationMutation>;
+export type CreateConversationMutationOptions = Apollo.BaseMutationOptions<CreateConversationMutation, CreateConversationMutationVariables>;
+export const ListConversationsDocument = gql`
+    query ListConversations($cursor: String) {
+  listConversations(args: {take: 30, cursor: $cursor}) {
+    items {
+      id
+      type
+      title
+      updatedAt
+      participants {
+        id
+        username
+      }
+    }
+    pageInfo {
+      nextCursor
+      hasNextPage
+    }
+  }
+}
+    `;
+
+/**
+ * __useListConversationsQuery__
+ *
+ * To run a query within a React component, call `useListConversationsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useListConversationsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useListConversationsQuery({
+ *   variables: {
+ *      cursor: // value for 'cursor'
+ *   },
+ * });
+ */
+export function useListConversationsQuery(baseOptions?: Apollo.QueryHookOptions<ListConversationsQuery, ListConversationsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ListConversationsQuery, ListConversationsQueryVariables>(ListConversationsDocument, options);
+      }
+export function useListConversationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ListConversationsQuery, ListConversationsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ListConversationsQuery, ListConversationsQueryVariables>(ListConversationsDocument, options);
+        }
+export function useListConversationsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<ListConversationsQuery, ListConversationsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<ListConversationsQuery, ListConversationsQueryVariables>(ListConversationsDocument, options);
+        }
+export type ListConversationsQueryHookResult = ReturnType<typeof useListConversationsQuery>;
+export type ListConversationsLazyQueryHookResult = ReturnType<typeof useListConversationsLazyQuery>;
+export type ListConversationsSuspenseQueryHookResult = ReturnType<typeof useListConversationsSuspenseQuery>;
+export type ListConversationsQueryResult = Apollo.QueryResult<ListConversationsQuery, ListConversationsQueryVariables>;
+export const ListMessagesDocument = gql`
+    query ListMessages($conversationId: ID!, $cursor: String) {
+  listMessages(args: {conversationId: $conversationId, take: 40, cursor: $cursor}) {
+    items {
+      id
+      conversationId
+      content
+      type
+      createdAt
+      sender {
+        id
+        username
+      }
+      reactions {
+        emoji
+        userId
+        user {
+          username
+        }
+      }
+    }
+    pageInfo {
+      nextCursor
+      hasNextPage
+    }
+  }
+}
+    `;
+
+/**
+ * __useListMessagesQuery__
+ *
+ * To run a query within a React component, call `useListMessagesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useListMessagesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useListMessagesQuery({
+ *   variables: {
+ *      conversationId: // value for 'conversationId'
+ *      cursor: // value for 'cursor'
+ *   },
+ * });
+ */
+export function useListMessagesQuery(baseOptions: Apollo.QueryHookOptions<ListMessagesQuery, ListMessagesQueryVariables> & ({ variables: ListMessagesQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ListMessagesQuery, ListMessagesQueryVariables>(ListMessagesDocument, options);
+      }
+export function useListMessagesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ListMessagesQuery, ListMessagesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ListMessagesQuery, ListMessagesQueryVariables>(ListMessagesDocument, options);
+        }
+export function useListMessagesSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<ListMessagesQuery, ListMessagesQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<ListMessagesQuery, ListMessagesQueryVariables>(ListMessagesDocument, options);
+        }
+export type ListMessagesQueryHookResult = ReturnType<typeof useListMessagesQuery>;
+export type ListMessagesLazyQueryHookResult = ReturnType<typeof useListMessagesLazyQuery>;
+export type ListMessagesSuspenseQueryHookResult = ReturnType<typeof useListMessagesSuspenseQuery>;
+export type ListMessagesQueryResult = Apollo.QueryResult<ListMessagesQuery, ListMessagesQueryVariables>;
+export const RemoveReactionDocument = gql`
+    mutation RemoveReaction($input: RemoveReactionInput!) {
+  removeReaction(input: $input)
+}
+    `;
+export type RemoveReactionMutationFn = Apollo.MutationFunction<RemoveReactionMutation, RemoveReactionMutationVariables>;
+
+/**
+ * __useRemoveReactionMutation__
+ *
+ * To run a mutation, you first call `useRemoveReactionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRemoveReactionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [removeReactionMutation, { data, loading, error }] = useRemoveReactionMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useRemoveReactionMutation(baseOptions?: Apollo.MutationHookOptions<RemoveReactionMutation, RemoveReactionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RemoveReactionMutation, RemoveReactionMutationVariables>(RemoveReactionDocument, options);
+      }
+export type RemoveReactionMutationHookResult = ReturnType<typeof useRemoveReactionMutation>;
+export type RemoveReactionMutationResult = Apollo.MutationResult<RemoveReactionMutation>;
+export type RemoveReactionMutationOptions = Apollo.BaseMutationOptions<RemoveReactionMutation, RemoveReactionMutationVariables>;
+export const SendMessageDocument = gql`
+    mutation SendMessage($input: SendMessageInput!) {
+  sendMessage(input: $input) {
+    id
+    conversationId
+    content
+    type
+    createdAt
+    sender {
+      id
+      username
+    }
+    reactions {
+      emoji
+      userId
+      user {
+        username
+      }
+    }
+  }
+}
+    `;
+export type SendMessageMutationFn = Apollo.MutationFunction<SendMessageMutation, SendMessageMutationVariables>;
+
+/**
+ * __useSendMessageMutation__
+ *
+ * To run a mutation, you first call `useSendMessageMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSendMessageMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [sendMessageMutation, { data, loading, error }] = useSendMessageMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useSendMessageMutation(baseOptions?: Apollo.MutationHookOptions<SendMessageMutation, SendMessageMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<SendMessageMutation, SendMessageMutationVariables>(SendMessageDocument, options);
+      }
+export type SendMessageMutationHookResult = ReturnType<typeof useSendMessageMutation>;
+export type SendMessageMutationResult = Apollo.MutationResult<SendMessageMutation>;
+export type SendMessageMutationOptions = Apollo.BaseMutationOptions<SendMessageMutation, SendMessageMutationVariables>;
+export const SendTypingDocument = gql`
+    mutation SendTyping($conversationId: ID!) {
+  sendTyping(conversationId: $conversationId)
+}
+    `;
+export type SendTypingMutationFn = Apollo.MutationFunction<SendTypingMutation, SendTypingMutationVariables>;
+
+/**
+ * __useSendTypingMutation__
+ *
+ * To run a mutation, you first call `useSendTypingMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSendTypingMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [sendTypingMutation, { data, loading, error }] = useSendTypingMutation({
+ *   variables: {
+ *      conversationId: // value for 'conversationId'
+ *   },
+ * });
+ */
+export function useSendTypingMutation(baseOptions?: Apollo.MutationHookOptions<SendTypingMutation, SendTypingMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<SendTypingMutation, SendTypingMutationVariables>(SendTypingDocument, options);
+      }
+export type SendTypingMutationHookResult = ReturnType<typeof useSendTypingMutation>;
+export type SendTypingMutationResult = Apollo.MutationResult<SendTypingMutation>;
+export type SendTypingMutationOptions = Apollo.BaseMutationOptions<SendTypingMutation, SendTypingMutationVariables>;
+export const OnMessageAddedDocument = gql`
+    subscription OnMessageAdded($conversationId: ID!) {
+  messageAdded(conversationId: $conversationId) {
+    id
+    conversationId
+    content
+    type
+    createdAt
+    sender {
+      id
+      username
+    }
+    reactions {
+      emoji
+      userId
+      user {
+        username
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useOnMessageAddedSubscription__
+ *
+ * To run a query within a React component, call `useOnMessageAddedSubscription` and pass it any options that fit your needs.
+ * When your component renders, `useOnMessageAddedSubscription` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useOnMessageAddedSubscription({
+ *   variables: {
+ *      conversationId: // value for 'conversationId'
+ *   },
+ * });
+ */
+export function useOnMessageAddedSubscription(baseOptions: Apollo.SubscriptionHookOptions<OnMessageAddedSubscription, OnMessageAddedSubscriptionVariables> & ({ variables: OnMessageAddedSubscriptionVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useSubscription<OnMessageAddedSubscription, OnMessageAddedSubscriptionVariables>(OnMessageAddedDocument, options);
+      }
+export type OnMessageAddedSubscriptionHookResult = ReturnType<typeof useOnMessageAddedSubscription>;
+export type OnMessageAddedSubscriptionResult = Apollo.SubscriptionResult<OnMessageAddedSubscription>;
+export const OnMessageUpdatedDocument = gql`
+    subscription OnMessageUpdated($conversationId: ID!) {
+  messageUpdated(conversationId: $conversationId) {
+    conversationId
+    messageId
+    kind
+    emoji
+    userId
+  }
+}
+    `;
+
+/**
+ * __useOnMessageUpdatedSubscription__
+ *
+ * To run a query within a React component, call `useOnMessageUpdatedSubscription` and pass it any options that fit your needs.
+ * When your component renders, `useOnMessageUpdatedSubscription` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useOnMessageUpdatedSubscription({
+ *   variables: {
+ *      conversationId: // value for 'conversationId'
+ *   },
+ * });
+ */
+export function useOnMessageUpdatedSubscription(baseOptions: Apollo.SubscriptionHookOptions<OnMessageUpdatedSubscription, OnMessageUpdatedSubscriptionVariables> & ({ variables: OnMessageUpdatedSubscriptionVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useSubscription<OnMessageUpdatedSubscription, OnMessageUpdatedSubscriptionVariables>(OnMessageUpdatedDocument, options);
+      }
+export type OnMessageUpdatedSubscriptionHookResult = ReturnType<typeof useOnMessageUpdatedSubscription>;
+export type OnMessageUpdatedSubscriptionResult = Apollo.SubscriptionResult<OnMessageUpdatedSubscription>;
+export const OnTypingStartedDocument = gql`
+    subscription OnTypingStarted($conversationId: ID!) {
+  typingStarted(conversationId: $conversationId) {
+    conversationId
+    userId
+    at
+  }
+}
+    `;
+
+/**
+ * __useOnTypingStartedSubscription__
+ *
+ * To run a query within a React component, call `useOnTypingStartedSubscription` and pass it any options that fit your needs.
+ * When your component renders, `useOnTypingStartedSubscription` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the subscription, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useOnTypingStartedSubscription({
+ *   variables: {
+ *      conversationId: // value for 'conversationId'
+ *   },
+ * });
+ */
+export function useOnTypingStartedSubscription(baseOptions: Apollo.SubscriptionHookOptions<OnTypingStartedSubscription, OnTypingStartedSubscriptionVariables> & ({ variables: OnTypingStartedSubscriptionVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useSubscription<OnTypingStartedSubscription, OnTypingStartedSubscriptionVariables>(OnTypingStartedDocument, options);
+      }
+export type OnTypingStartedSubscriptionHookResult = ReturnType<typeof useOnTypingStartedSubscription>;
+export type OnTypingStartedSubscriptionResult = Apollo.SubscriptionResult<OnTypingStartedSubscription>;
+export const MarkReadDocument = gql`
+    mutation MarkRead($input: MarkReadInput!) {
+  markRead(input: $input)
+}
+    `;
+export type MarkReadMutationFn = Apollo.MutationFunction<MarkReadMutation, MarkReadMutationVariables>;
+
+/**
+ * __useMarkReadMutation__
+ *
+ * To run a mutation, you first call `useMarkReadMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useMarkReadMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [markReadMutation, { data, loading, error }] = useMarkReadMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useMarkReadMutation(baseOptions?: Apollo.MutationHookOptions<MarkReadMutation, MarkReadMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<MarkReadMutation, MarkReadMutationVariables>(MarkReadDocument, options);
+      }
+export type MarkReadMutationHookResult = ReturnType<typeof useMarkReadMutation>;
+export type MarkReadMutationResult = Apollo.MutationResult<MarkReadMutation>;
+export type MarkReadMutationOptions = Apollo.BaseMutationOptions<MarkReadMutation, MarkReadMutationVariables>;

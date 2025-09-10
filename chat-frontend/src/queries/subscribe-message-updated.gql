@@ -1,0 +1,9 @@
+subscription OnMessageUpdated($conversationId: ID!) {
+  messageUpdated(conversationId: $conversationId) {
+    conversationId
+    messageId
+    kind
+    emoji
+    userId
+  }
+}

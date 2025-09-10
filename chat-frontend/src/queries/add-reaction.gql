@@ -1,0 +1,9 @@
+mutation AddReaction($input: AddReactionInput!) {
+  addReaction(input: $input) {
+    emoji
+    userId
+    user {
+      username
+    }
+  }
+}

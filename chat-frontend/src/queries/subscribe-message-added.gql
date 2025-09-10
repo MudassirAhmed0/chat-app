@@ -1,0 +1,20 @@
+subscription OnMessageAdded($conversationId: ID!) {
+  messageAdded(conversationId: $conversationId) {
+    id
+    conversationId
+    content
+    type
+    createdAt
+    sender {
+      id
+      username
+    }
+    reactions {
+      emoji
+      userId
+      user {
+        username
+      }
+    }
+  }
+}

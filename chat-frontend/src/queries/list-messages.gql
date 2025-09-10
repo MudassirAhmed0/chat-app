@@ -1,0 +1,26 @@
+query ListMessages($conversationId: ID!, $cursor: String) {
+  listMessages(args: { conversationId: $conversationId, take: 40, cursor: $cursor }) {
+    items {
+      id
+      conversationId
+      content
+      type
+      createdAt
+      sender {
+        id
+        username
+      }
+      reactions {
+        emoji
+        userId
+        user {
+          username
+        }
+      }
+    }
+    pageInfo {
+      nextCursor
+      hasNextPage
+    }
+  }
+}

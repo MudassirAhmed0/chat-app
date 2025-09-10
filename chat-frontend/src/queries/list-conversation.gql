@@ -1,0 +1,18 @@
+query ListConversations($cursor: String) {
+  listConversations(args: { take: 30, cursor: $cursor }) {
+    items {
+      id
+      type
+      title
+      updatedAt
+      participants {
+        id
+        username
+      }
+    }
+    pageInfo {
+      nextCursor
+      hasNextPage
+    }
+  }
+}
