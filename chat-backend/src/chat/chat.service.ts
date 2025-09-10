@@ -298,7 +298,7 @@ export class ChatService {
 
     await this.pubSub.publish(topicMessageUpdated(input.conversationId), {
       messageUpdated: {
-        converstaionId: input.conversationId,
+        conversationId: input.conversationId,
         kind: MessageUpdatedKind.READ,
         messageId: input.messageId,
         userId: currentUserId,
@@ -340,7 +340,7 @@ export class ChatService {
 
     await this.pubSub.publish(topicMessageUpdated(msg.conversationId), {
       messageUpdated: {
-        converstaionId: msg.conversationId,
+        conversationId: msg.conversationId,
         kind: MessageUpdatedKind.REACTION_ADDED,
         messageId: msg.conversationId,
         userId: currentUserId,
@@ -369,7 +369,7 @@ export class ChatService {
     });
     await this.pubSub.publish(topicMessageUpdated(msg.conversationId), {
       messageUpdated: {
-        converstaionId: msg.conversationId,
+        conversationId: msg.conversationId,
         kind: MessageUpdatedKind.REACTION_ADDED,
         messageId: msg.conversationId,
         userId: currentUserId,
@@ -379,11 +379,11 @@ export class ChatService {
     return true;
   }
 
-  async typingStarted(converstaionId: string, userId: string) {
-    await this.ensureMembers(converstaionId, userId);
-    await this.pubSub.publish(topicTypingStarted(converstaionId), {
+  async typingStarted(conversationId: string, userId: string) {
+    await this.ensureMembers(conversationId, userId);
+    await this.pubSub.publish(topicTypingStarted(conversationId), {
       typingStarted: {
-        converstaionId,
+        conversationId,
         userId,
         at: new Date(),
       },

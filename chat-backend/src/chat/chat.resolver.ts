@@ -72,9 +72,9 @@ export class ChatResolver {
     resolve: (payload: any) => payload.messageAdded,
   })
   messageAdded(
-    @Args('conversationId', { type: () => ID }) converstaionId: string,
+    @Args('conversationId', { type: () => ID }) conversationId: string,
   ) {
-    return this.pubSub.asyncIterator(topicMessageAdded(converstaionId));
+    return this.pubSub.asyncIterator(topicMessageAdded(conversationId));
   }
 
   @Mutation(() => MessageModel)
