@@ -106,7 +106,7 @@ enum MessageType {
 }
 
 type MessageUpdated {
-  converstaionId: ID!
+  conversationId: ID!
   emoji: String
   kind: MessageUpdatedKind!
   messageId: ID!

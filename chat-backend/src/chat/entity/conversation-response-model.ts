@@ -62,7 +62,7 @@ registerEnumType(MessageUpdatedKind, { name: 'MessageUpdatedKind' });
 @ObjectType()
 export class MessageUpdated {
   @Field(() => ID)
-  converstaionId!: string;
+  conversationId!: string;
   @Field(() => ID)
   messageId!: string;
   @Field(() => MessageUpdatedKind)
