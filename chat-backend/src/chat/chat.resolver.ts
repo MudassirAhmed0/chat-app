@@ -122,7 +122,7 @@ export class ChatResolver {
       !!payload?.messageUpdated && !!variables?.conversationId,
     resolve: (payload) => payload.messageUpdated,
   })
-  messageUpdate(
+  messageUpdated(
     @Args('conversationId', { type: () => ID }) conversationId: string,
   ) {
     return this.pubSub.asyncIterator(topicMessageUpdated(conversationId));

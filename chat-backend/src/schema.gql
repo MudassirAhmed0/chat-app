@@ -165,7 +165,7 @@ input SendMessageInput {
 
 type Subscription {
   messageAdded(conversationId: ID!): MessageModel!
-  messageUpdate(conversationId: ID!): MessageUpdated!
+  messageUpdated(conversationId: ID!): MessageUpdated!
   typingStarted(conversationId: ID!): TypingPayload!
 }
 
