@@ -142,6 +142,7 @@ type Query {
   listConversations(args: ListConversationsArgs): ConversationPage!
   listMessages(args: ListMessagesArgs!): MessagePage!
   ping: String!
+  searchUsers(term: String!): [UserModel!]!
 }
 
 type ReactionModel {

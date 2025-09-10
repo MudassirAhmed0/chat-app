@@ -1,13 +1,16 @@
 'use client';
+
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import useConversation from '@/hooks/data-hooks/useConversation';
+import { NewChatModal } from './new-chat-modal';
 
 export function Sidebar() {
   const { items, loading } = useConversation();
   const [q, setQ] = useState('');
+  const [open, setOpen] = useState(false);
 
   const filtered = q
     ? items.filter(
@@ -22,9 +25,12 @@ export function Sidebar() {
       <div className="p-4 border-b">
         <Input placeholder="Search…" value={q} onChange={(e) => setQ(e.target.value)} />
         <div className="mt-3">
-          <Button className="w-full">+ New chat</Button>
+          <Button className="w-full" onClick={() => setOpen(true)}>
+            + New chat
+          </Button>
         </div>
       </div>
+
       <div className="flex-1 overflow-auto">
         {loading && (
           <div className="p-4 space-y-2">
@@ -50,6 +56,8 @@ export function Sidebar() {
           <div className="p-4 text-sm opacity-60">No conversations</div>
         )}
       </div>
+
+      <NewChatModal open={open} onClose={() => setOpen(false)} />
     </aside>
   );
 }
