@@ -31,7 +31,7 @@ type ConversationPage {
   pageInfo: PageInfo!
 }
 
-"""Conversation type (DM or GROUP)"""
+"""Conversation type ( DM, GROUP)"""
 enum ConversationType {
   DM
   GROUP
@@ -105,6 +105,20 @@ enum MessageType {
   TEXT
 }
 
+type MessageUpdated {
+  converstaionId: ID!
+  emoji: String
+  kind: MessageUpdatedKind!
+  messageId: ID!
+  userId: String
+}
+
+enum MessageUpdatedKind {
+  REACTION_ADDED
+  REACTION_REMOVED
+  READ
+}
+
 type Mutation {
   addReaction(input: AddReactionInput!): ReactionModel!
   createConversation(input: CreateConversationInput!): Conversation!
@@ -115,6 +129,7 @@ type Mutation {
   register(input: CreateUserInput!): AuthPayload!
   removeReaction(input: RemoveReactionInput!): Boolean!
   sendMessage(input: SendMessageInput!): MessageModel!
+  sendTyping(conversationId: ID!): Boolean!
 }
 
 type PageInfo {
@@ -146,6 +161,18 @@ input SendMessageInput {
   conversationId: ID!
   replyToId: ID
   type: MessageType! = TEXT
+}
+
+type Subscription {
+  messageAdded(conversationId: ID!): MessageModel!
+  messageUpdate(conversationId: ID!): MessageUpdated!
+  typingStarted(conversationId: ID!): TypingPayload!
+}
+
+type TypingPayload {
+  at: DateTime!
+  conversationId: ID!
+  userId: ID!
 }
 
 type UserModel {

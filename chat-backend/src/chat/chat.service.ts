@@ -1,5 +1,6 @@
 import {
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -8,6 +9,7 @@ import { CreateConversationInput } from './dto/create-conversation-input.dto';
 import { ConversationType, DeliveryState, Prisma } from '@prisma/client';
 import {
   ConversationModel,
+  MessageUpdatedKind,
   UserSlim,
 } from './entity/conversation-response-model';
 import { SendMessageInput } from './dto/send-message-input.dto';
@@ -18,6 +20,13 @@ import {
   AddReactionInput,
   RemoveReactionInput,
 } from './dto/reaction-input.dto';
+import { PUB_SUB } from 'src/realtime/pubsub.provider';
+import { RedisPubSub } from 'graphql-redis-subscriptions';
+import {
+  topicMessageAdded,
+  topicMessageUpdated,
+  topicTypingStarted,
+} from './chat.event';
 
 const userSelect = {
   id: true,
@@ -61,8 +70,10 @@ const messageBaseSelect = {
 
 @Injectable()
 export class ChatService {
-  // this method will just work as a guard
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    @Inject(PUB_SUB) private readonly pubSub: RedisPubSub,
+  ) {}
   private async ensureMembers(conversationId: string, userId: string) {
     const membership = await this.prismaService.membership.findUnique({
       where: {
@@ -187,14 +198,8 @@ export class ChatService {
   }
 
   async sendMessage(currentUserId: string, input: SendMessageInput) {
-    // 1) Guard: ensure the sender is actually part of this conversation
     await this.ensureMembers(currentUserId, input.conversationId);
-    // 2) Create the message row
-    // - belongs to a conversation
-    // - authored by currentUserId
-    // - has type/content
-    // - may optionally reference another message (replyToId)
-    // - only selecting a "base" projection (messageBaseSelect)
+
     const created = await this.prismaService.message.create({
       data: {
         conversationId: input.conversationId,
@@ -206,17 +211,10 @@ export class ChatService {
       select: messageBaseSelect,
     });
 
-    // 3) Touch the parent conversation so it jumps to top in lists
     await this.prismaService.conversation.update({
       where: { id: input.conversationId },
       data: { updatedAt: new Date() },
     });
-    // 4) Prepare delivery state records for each member
-    // - First, load all member userIds of this conversation
-    // - Then, insert a MessageStatus row per member
-    //   (this tracks SENT/DELIVERED/READ per user per message)
-    // - Sender gets state SENT
-    // - Others also start as SENT (to be updated later)
 
     const members = await this.prismaService.membership.findMany({
       where: { conversationId: input.conversationId },
@@ -234,7 +232,10 @@ export class ChatService {
       skipDuplicates: true,
     });
 
-    // 5) Return the created message (already shaped by messageBaseSelect)
+    await this.pubSub.publish(topicMessageAdded(input.conversationId), {
+      messageAdded: created,
+    });
+
     return created;
   }
 
@@ -295,6 +296,15 @@ export class ChatService {
       data: { state: DeliveryState.READ, readAt: new Date() },
     });
 
+    await this.pubSub.publish(topicMessageUpdated(input.conversationId), {
+      messageUpdated: {
+        converstaionId: input.conversationId,
+        kind: MessageUpdatedKind.READ,
+        messageId: input.messageId,
+        userId: currentUserId,
+      },
+    });
+
     return true;
   }
   async addReaction(currentUserId: string, input: AddReactionInput) {
@@ -327,6 +337,16 @@ export class ChatService {
         user: { select: userSelect },
       },
     });
+
+    await this.pubSub.publish(topicMessageUpdated(msg.conversationId), {
+      messageUpdated: {
+        converstaionId: msg.conversationId,
+        kind: MessageUpdatedKind.REACTION_ADDED,
+        messageId: msg.conversationId,
+        userId: currentUserId,
+        emoji: created.emoji,
+      },
+    });
     return created;
   }
 
@@ -347,6 +367,26 @@ export class ChatService {
         },
       },
     });
+    await this.pubSub.publish(topicMessageUpdated(msg.conversationId), {
+      messageUpdated: {
+        converstaionId: msg.conversationId,
+        kind: MessageUpdatedKind.REACTION_ADDED,
+        messageId: msg.conversationId,
+        userId: currentUserId,
+        emoji: input.emoji,
+      },
+    });
     return true;
+  }
+
+  async typingStarted(converstaionId: string, userId: string) {
+    await this.ensureMembers(converstaionId, userId);
+    await this.pubSub.publish(topicTypingStarted(converstaionId), {
+      typingStarted: {
+        converstaionId,
+        userId,
+        at: new Date(),
+      },
+    });
   }
 }

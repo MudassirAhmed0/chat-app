@@ -1,17 +1,23 @@
-import { UseGuards } from '@nestjs/common';
+import { Inject, UseGuards } from '@nestjs/common';
 import {
   Args,
   Field,
+  ID,
   Mutation,
   ObjectType,
   Query,
   Resolver,
+  Subscription,
 } from '@nestjs/graphql';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { GQLAuthGuards } from 'src/auth/guards/gql-auth.guard';
 import { CreateConversationInput } from './dto/create-conversation-input.dto';
 import { ChatService } from './chat.service';
-import { ConversationModel } from './entity/conversation-response-model';
+import {
+  ConversationModel,
+  MessageUpdated,
+  TypingPayload,
+} from './entity/conversation-response-model';
 import { SendMessageInput } from './dto/send-message-input.dto';
 import { MessageModel } from './entity/message-response.model';
 import { ListConversationsArgs } from './dto/list-conversation-args.dto';
@@ -23,11 +29,21 @@ import {
 } from './dto/reaction-input.dto';
 import { ConversationPage, MessagePage } from './entity/page-model';
 import { ReactionModel } from './entity/reaction-response-model';
+import { PUB_SUB } from 'src/realtime/pubsub.provider';
+import { RedisPubSub } from 'graphql-redis-subscriptions';
+import {
+  topicMessageAdded,
+  topicMessageUpdated,
+  topicTypingStarted,
+} from './chat.event';
 
 @Resolver()
 @UseGuards(GQLAuthGuards)
 export class ChatResolver {
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    @Inject(PUB_SUB) private readonly pubSub: RedisPubSub,
+  ) {}
 
   @Mutation(() => ConversationModel)
   createConversation(
@@ -50,6 +66,17 @@ export class ChatResolver {
   }
 
   // Messages
+  @Subscription(() => MessageModel, {
+    filter: (payload: any, variables: { conversationId: string }) =>
+      !!payload?.messageAdded && !!variables?.conversationId,
+    resolve: (payload: any) => payload.messageAdded,
+  })
+  messageAdded(
+    @Args('conversationId', { type: () => ID }) converstaionId: string,
+  ) {
+    return this.pubSub.asyncIterator(topicMessageAdded(converstaionId));
+  }
+
   @Mutation(() => MessageModel)
   sendMessage(
     @CurrentUser() user: { userId: string },
@@ -88,5 +115,35 @@ export class ChatResolver {
     @Args('input') input: RemoveReactionInput,
   ) {
     return this.chatService.removeReaction(user.userId, input);
+  }
+
+  @Subscription(() => MessageUpdated, {
+    filter: (payload: any, variables: { conversationId: string }) =>
+      !!payload?.messageUpdated && !!variables?.conversationId,
+    resolve: (payload) => payload.messageUpdated,
+  })
+  messageUpdate(
+    @Args('conversationId', { type: () => ID }) conversationId: string,
+  ) {
+    return this.pubSub.asyncIterator(topicMessageUpdated(conversationId));
+  }
+
+  @Subscription(() => TypingPayload, {
+    filter: (payload: any, variables: { conversationId: string }) =>
+      !!payload?.typingStarted && !!variables?.conversationId,
+    resolve: (payload) => payload.typingStarted,
+  })
+  typingStarted(
+    @Args('conversationId', { type: () => ID }) conversationId: string,
+  ) {
+    return this.pubSub.asyncIterator(topicTypingStarted(conversationId));
+  }
+
+  @Mutation(() => Boolean)
+  async sendTyping(
+    @CurrentUser() user: { userId: string },
+    @Args('conversationId', { type: () => ID }) conversationId: string,
+  ) {
+    return this.chatService.typingStarted(conversationId, user.userId);
   }
 }

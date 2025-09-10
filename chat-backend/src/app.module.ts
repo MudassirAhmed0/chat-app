@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { ChatModule } from './chat/chat.module';
 import { HealthModule } from './health/health.module';
+import { PubsubModule } from './realtime/pubsub.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { HealthModule } from './health/health.module';
     AuthModule,
     ChatModule,
     HealthModule,
+    PubsubModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,4 +1,3 @@
-// conversation.model.ts
 import {
   ObjectType,
   Field,
@@ -8,7 +7,6 @@ import {
 } from '@nestjs/graphql';
 import { ConversationType } from '@prisma/client';
 
-// If you haven't already done this elsewhere:
 registerEnumType(ConversationType, {
   name: 'ConversationType',
   description: 'Conversation type (DM or GROUP)',
@@ -51,4 +49,33 @@ export class ConversationModel {
 
   @Field(() => [UserSlim])
   participants!: UserSlim[];
+}
+
+export enum MessageUpdatedKind {
+  READ = 'READ',
+  REACTION_ADDED = 'REACTION_ADDED',
+  REACTION_REMOVED = 'REACTION_REMOVED',
+}
+
+registerEnumType(MessageUpdatedKind, { name: 'MessageUpdatedKind' });
+
+@ObjectType()
+export class MessageUpdated {
+  @Field(() => ID)
+  converstaionId!: string;
+  @Field(() => ID)
+  messageId!: string;
+  @Field(() => MessageUpdatedKind)
+  kind!: MessageUpdatedKind;
+  @Field(() => String, { nullable: true })
+  emoji?: string;
+  @Field(() => String, { nullable: true })
+  userId?: string;
+}
+
+@ObjectType()
+export class TypingPayload {
+  @Field(() => ID) conversationId!: string;
+  @Field(() => ID) userId!: string;
+  @Field(() => Date) at!: Date;
 }
