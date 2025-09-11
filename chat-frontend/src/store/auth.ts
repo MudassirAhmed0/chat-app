@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-
+import jwt, { JwtPayload } from 'jsonwebtoken';
 function readCookie(name: string): string | null {
   return (
     document.cookie
@@ -9,6 +9,10 @@ function readCookie(name: string): string | null {
   );
 }
 
+interface MyJwtPayload extends JwtPayload {
+  sub: string;
+  email?: string;
+}
 type User = {
   email: string;
   username: string;
@@ -26,8 +30,20 @@ type AuthState = {
 
 export const useAuthStore = create<AuthState>((set, get) => {
   const token = typeof document !== 'undefined' ? readCookie('accessToken') : null;
+  let userId = null;
+  let userEmail = null;
+
+  if (token) {
+    const decoded = jwt.decode(token) as MyJwtPayload | null;
+
+    if (decoded) {
+      userId = decoded.sub;
+      userEmail = decoded.email || null;
+    }
+  }
+
   return {
-    user: null,
+    user: userId && userEmail ? { id: userId, email: userEmail, username: '' } : null,
     accessToken: token,
     refreshToken: null,
     setAuth: (user, accessToken, refreshToken) => {
