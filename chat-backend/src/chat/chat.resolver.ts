@@ -82,7 +82,6 @@ export class ChatResolver {
     @CurrentUser() user: { userId: string },
     @Args('input') input: SendMessageInput,
   ) {
-    console.log('================', user, '===============');
     return this.chatService.sendMessage(user.userId, input);
   }
 

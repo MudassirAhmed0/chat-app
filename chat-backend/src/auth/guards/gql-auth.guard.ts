@@ -8,10 +8,11 @@ export class GQLAuthGuards extends AuthGuard('jwt') {
     const ctx = GqlExecutionContext.create(context);
     const { req, extra } = ctx.getContext();
 
-    if (req) return req;
+    if (req.headers) return req;
     const fakeReq = { headers: {} as Record<string, string> };
     const auth =
       extra?.request?.headers?.authorization ?? extra?.headers?.authorization;
+
     if (auth) fakeReq.headers['authorization'] = auth;
     return fakeReq;
   }

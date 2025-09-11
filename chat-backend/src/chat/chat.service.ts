@@ -241,7 +241,6 @@ export class ChatService {
   }
 
   async listMessages(currentUserId: string, args: ListMessagesArgs) {
-    console.log(currentUserId, args, '------');
     await this.ensureMembers(args.conversationId, currentUserId);
     const take = args.take ?? 30;
 
