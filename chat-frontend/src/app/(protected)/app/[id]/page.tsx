@@ -32,9 +32,8 @@ export default function ChatPage() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 min-h-0">
-        <MessageList me={myId} items={items} onLoadMore={loadMore} hasNextPage={hasNextPage} />
-      </div>
+
+      <MessageList me={myId} items={items} onLoadMore={loadMore} hasNextPage={hasNextPage} />
 
       <TypingBar text={typingText} />
       <Composer onSend={sendMessage} onTyping={notifyTyping} />

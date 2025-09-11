@@ -1,9 +1,11 @@
 import { Field, ID, InputType, Int } from '@nestjs/graphql';
-import { IsOptional, Max, Min } from 'class-validator';
+import { IsOptional, IsString, Max, Min } from 'class-validator';
 
 @InputType()
 export class ListMessagesArgs {
-  @Field(() => ID) conversationId!: string;
+  @Field(() => ID)
+  @IsString()
+  conversationId!: string;
   @Field(() => String, { nullable: true })
   @IsOptional()
   cursor?: string;

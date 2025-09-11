@@ -75,7 +75,6 @@ export class ChatService {
     @Inject(PUB_SUB) private readonly pubSub: RedisPubSub,
   ) {}
   private async ensureMembers(conversationId: string, userId: string) {
-    console.log(conversationId, userId);
     const membership = await this.prismaService.membership.findUnique({
       where: {
         conversationId_userId: { conversationId, userId },
@@ -142,6 +141,7 @@ export class ChatService {
 
   async listConversations(currentUserId: string, args: ListConversationsArgs) {
     // Simple cursor by id (stable enough for demo). Order newest updated first.
+
     const take = args.take ?? 20;
     const where: Prisma.ConversationWhereInput = {
       memberships: { some: { userId: currentUserId } },
@@ -241,6 +241,7 @@ export class ChatService {
   }
 
   async listMessages(currentUserId: string, args: ListMessagesArgs) {
+    console.log(currentUserId, args, '------');
     await this.ensureMembers(args.conversationId, currentUserId);
     const take = args.take ?? 30;
 
