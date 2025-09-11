@@ -9,7 +9,7 @@ registerEnumType(MessageType, {
 
 @InputType()
 export class SendMessageInput {
-  @Field(() => ID) conversationId!: string;
+  @Field(() => ID) @IsString() conversationId!: string;
   @Field(() => MessageType, { defaultValue: MessageType.TEXT })
   @IsEnum(MessageType)
   type: MessageType = MessageType.TEXT;

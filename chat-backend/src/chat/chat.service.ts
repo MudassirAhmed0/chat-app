@@ -75,6 +75,7 @@ export class ChatService {
     @Inject(PUB_SUB) private readonly pubSub: RedisPubSub,
   ) {}
   private async ensureMembers(conversationId: string, userId: string) {
+    console.log(conversationId, userId);
     const membership = await this.prismaService.membership.findUnique({
       where: {
         conversationId_userId: { conversationId, userId },
@@ -198,7 +199,7 @@ export class ChatService {
   }
 
   async sendMessage(currentUserId: string, input: SendMessageInput) {
-    await this.ensureMembers(currentUserId, input.conversationId);
+    await this.ensureMembers(input.conversationId, currentUserId);
 
     const created = await this.prismaService.message.create({
       data: {
