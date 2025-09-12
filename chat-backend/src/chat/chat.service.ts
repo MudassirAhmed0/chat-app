@@ -234,7 +234,11 @@ export class ChatService {
     });
 
     await this.pubSub.publish(topicMessageAdded(input.conversationId), {
-      messageAdded: created,
+      messageAdded: {
+        ...created,
+        createdAt: new Date(created.createdAt ?? Date.now()),
+        updatedAt: new Date(created.updatedAt ?? Date.now()),
+      },
     });
 
     return created;

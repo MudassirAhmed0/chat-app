@@ -52,6 +52,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
     },
     clear: () => {
       document.cookie = `accessToken=; Path=/; Max-Age=0`;
+      set({ user: null, accessToken: null, refreshToken: null });
     },
     getAccessToken: () => get().accessToken,
   };

@@ -22,6 +22,7 @@ import {
 import { useAuthStore } from '@/store/auth';
 import { useEffect, useRef } from 'react';
 import dayjs from 'dayjs';
+import { loadErrorMessages, loadDevMessages } from '@apollo/client/dev';
 
 const useMessages = (conversationId: string) => {
   const myId = useAuthStore((s) => s.user?.id);
@@ -30,9 +31,10 @@ const useMessages = (conversationId: string) => {
     variables: { conversationId },
     fetchPolicy: 'cache-and-network',
   });
+  const clientRequestId = crypto.randomUUID;
   const [send] = useSendMessageMutation({
     optimisticResponse: (vars, { IGNORE }) => {
-      const tempId = 'temp-' + Math.random().toString(36).slice(2);
+      const tempId = 'temp-' + clientRequestId;
 
       // Build the optimistic payload with correct, explicit types
       const optimistic: SendMessageMutation = {
@@ -43,7 +45,7 @@ const useMessages = (conversationId: string) => {
           conversationId,
           content: vars.input.content,
           type: vars.input.type ?? MessageType.Text,
-          createdAt: new Date().toISOString(),
+          createdAt: new Date(),
           sender: { __typename: 'UserModel', id: myId, username: 'you' },
           // Avoid never[] by typing the empty array
           reactions: [] as Array<ReactionModel>,
@@ -51,21 +53,6 @@ const useMessages = (conversationId: string) => {
       };
 
       return optimistic;
-    },
-    update(cache, { data }) {
-      const msg = data?.sendMessage;
-      if (!msg) return;
-
-      cache.updateQuery({ query: ListMessagesDocument, variables: { conversationId } }, (prev) => {
-        const items = prev?.listMessages?.items ?? [];
-        return {
-          ...prev,
-          listMessages: {
-            ...prev?.listMessages,
-            items: [msg, ...items], // prepend (desc order)
-          },
-        };
-      });
     },
   });
 
@@ -75,6 +62,8 @@ const useMessages = (conversationId: string) => {
   const [sendTyping] = useSendTypingMutation();
 
   useEffect(() => {
+    loadDevMessages();
+    loadErrorMessages();
     const unsub1 = subscribeToMore<
       OnMessageAddedSubscription, // <-- subscription result
       OnMessageAddedSubscriptionVariables // <-- subscription variables
@@ -82,11 +71,14 @@ const useMessages = (conversationId: string) => {
       document: OnMessageAddedDocument,
       variables: { conversationId },
       updateQuery: (prev, { subscriptionData }) => {
+        console.log(prev, conversationId, subscriptionData, 'madarchod');
         const msg = subscriptionData.data?.messageAdded;
         if (!msg) return prev;
-
         // (Optional chaining if codegen made things nullable)
         const items = prev.listMessages?.items ?? [];
+        const tempIdx = items.findIndex(
+          (m) => m?.clientRequestId && m?.clientRequestId === msg?.clientRequestId,
+        );
         if (items.some((m) => m.id === msg.id)) return prev;
 
         return {
@@ -100,19 +92,20 @@ const useMessages = (conversationId: string) => {
       },
     });
 
-    const unsub2 = subscribeToMore({
-      document: OnMessageUpdatedDocument,
-      variables: { conversationId },
-      updateQuery: (prev) => prev,
-    });
-    const unsub3 = subscribeToMore({
-      document: OnTypingStartedDocument,
-      variables: { conversationId },
-      updateQuery: (prev) => prev,
-    });
+    // const unsub2 = subscribeToMore({
+    //   document: OnMessageUpdatedDocument,
+    //   variables: { conversationId },
+    //   updateQuery: (prev) => prev,
+    // });
+    // const unsub3 = subscribeToMore({
+    //   document: OnTypingStartedDocument,
+    //   variables: { conversationId },
+    //   updateQuery: (prev) => prev,
+    // });
     return () => {
       unsub1();
-      unsub2();
+      // unsub2();
+      // unsub3();
     };
   }, [conversationId, subscribeToMore]);
 

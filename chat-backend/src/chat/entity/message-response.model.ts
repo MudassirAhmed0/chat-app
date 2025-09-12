@@ -1,4 +1,10 @@
-import { Field, ID, ObjectType, registerEnumType } from '@nestjs/graphql';
+import {
+  Field,
+  GraphQLISODateTime,
+  ID,
+  ObjectType,
+  registerEnumType,
+} from '@nestjs/graphql';
 import { MessageType as PrismaMessageType } from '@prisma/client';
 import { UserModel } from 'src/users/entities/user.model';
 import { ReactionModel } from './reaction-response-model';
@@ -11,9 +17,9 @@ export class MessageModel {
   @Field(() => String) senderId!: string;
   @Field(() => PrismaMessageType) type!: PrismaMessageType;
   @Field(() => String) content!: string;
-  @Field(() => Date) createdAt!: Date;
-  @Field(() => Date) updatedAt!: Date;
-
+  @Field(() => GraphQLISODateTime) createdAt!: Date;
+  @Field(() => GraphQLISODateTime) updatedAt!: Date;
+  @Field({ nullable: true }) clientRequestId?: string;
   @Field(() => UserModel) sender!: UserModel;
   @Field(() => [ReactionModel]) reactions!: ReactionModel[];
 }

@@ -83,6 +83,7 @@ input MarkReadInput {
 }
 
 type MessageModel {
+  clientRequestId: String
   content: String!
   conversationId: String!
   createdAt: DateTime!
@@ -158,6 +159,7 @@ input RemoveReactionInput {
 }
 
 input SendMessageInput {
+  clientRequestId: String
   content: String!
   conversationId: ID!
   replyToId: ID

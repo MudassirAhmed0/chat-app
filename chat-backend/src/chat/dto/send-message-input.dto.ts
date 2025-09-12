@@ -19,4 +19,5 @@ export class SendMessageInput {
   @Field(() => ID, { nullable: true })
   @IsOptional()
   replyToId?: string;
+  @Field({ nullable: true }) @IsOptional() clientRequestId?: string;
 }

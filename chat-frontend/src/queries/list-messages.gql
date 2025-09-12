@@ -6,6 +6,7 @@ query ListMessages($conversationId: ID!, $cursor: String) {
       content
       type
       createdAt
+      clientRequestId
       sender {
         id
         username

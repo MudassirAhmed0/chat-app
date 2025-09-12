@@ -77,5 +77,5 @@ export class MessageUpdated {
 export class TypingPayload {
   @Field(() => ID) conversationId!: string;
   @Field(() => ID) userId!: string;
-  @Field(() => Date) at!: Date;
+  @Field(() => GraphQLISODateTime) at!: Date;
 }

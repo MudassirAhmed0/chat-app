@@ -9,6 +9,7 @@ subscription OnMessageAdded($conversationId: ID!) {
       id
       username
     }
+    clientRequestId
     reactions {
       emoji
       userId

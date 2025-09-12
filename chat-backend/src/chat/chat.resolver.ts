@@ -68,8 +68,17 @@ export class ChatResolver {
   // Messages
   @Subscription(() => MessageModel, {
     filter: (payload: any, variables: { conversationId: string }) =>
-      !!payload?.messageAdded && !!variables?.conversationId,
-    resolve: (payload: any) => payload.messageAdded,
+      payload?.messageAdded?.conversationId === variables?.conversationId,
+    resolve: (payload) => {
+      const m = payload.messageAdded;
+      return {
+        ...m,
+        createdAt:
+          m.createdAt instanceof Date ? m.createdAt : new Date(m.createdAt),
+        updatedAt:
+          m.updatedAt instanceof Date ? m.updatedAt : new Date(m.updatedAt),
+      };
+    },
   })
   messageAdded(
     @Args('conversationId', { type: () => ID }) conversationId: string,

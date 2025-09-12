@@ -5,6 +5,7 @@ mutation SendMessage($input: SendMessageInput!) {
     content
     type
     createdAt
+    clientRequestId
     sender {
       id
       username
