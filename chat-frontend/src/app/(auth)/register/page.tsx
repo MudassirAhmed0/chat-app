@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useRegisterMutation } from '@/gql/graphql';
 import { useAuthStore } from '@/store/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -46,32 +47,45 @@ const RegisterPage = () => {
     if (!res.data) return;
     const { user, tokens } = res.data.register;
     setAuth(user, tokens.accessToken, tokens.refreshToken);
-    router.push('/app');
+    router.push('/');
   };
   return (
-    <main className="container max-w-md py-20">
-      <h1 className="text-2xl font-bold mb-6">Create account</h1>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" autoComplete="email" {...register('email')} />
-          {errors.email && <p className="text-sm text-red-600">{errors.email.message}</p>}
+    <main className="   py-20 flex items-center justify-center min-h-screen">
+      <div className="w-md">
+        <h1 className="text-2xl font-bold mb-6">Create account</h1>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div>
+            <Label htmlFor="email">Email</Label>
+            <Input id="email" type="email" autoComplete="email" {...register('email')} />
+            {errors.email && <p className="text-sm text-red-600">{errors.email.message}</p>}
+          </div>
+          <div>
+            <Label htmlFor="username">Username</Label>
+            <Input id="username" autoComplete="username" {...register('username')} />
+            {errors.username && <p className="text-sm text-red-600">{errors.username.message}</p>}
+          </div>
+          <div>
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              autoComplete="password"
+              {...register('password')}
+            />
+            {errors.password && <p className="text-sm text-red-600">{errors.password.message}</p>}
+          </div>
+          <Button type="submit" disabled={loading}>
+            Sign up
+          </Button>
+          {error && <p className="text-sm text-red-600 mt-2">{error.message}</p>}
+        </form>
+        <div className="mt-3">
+          Already have an account?{' '}
+          <Link href={'/login'} className="text-[var(--primary)] underline">
+            Sign in
+          </Link>
         </div>
-        <div>
-          <Label htmlFor="username">Username</Label>
-          <Input id="username" autoComplete="username" {...register('username')} />
-          {errors.username && <p className="text-sm text-red-600">{errors.username.message}</p>}
-        </div>
-        <div>
-          <Label htmlFor="password">Password</Label>
-          <Input id="password" type="password" autoComplete="password" {...register('password')} />
-          {errors.password && <p className="text-sm text-red-600">{errors.password.message}</p>}
-        </div>
-        <Button type="submit" disabled={loading}>
-          Sign up
-        </Button>
-        {error && <p className="text-sm text-red-600 mt-2">{error.message}</p>}
-      </form>
+      </div>
     </main>
   );
 };

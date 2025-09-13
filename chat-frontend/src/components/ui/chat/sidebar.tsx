@@ -74,7 +74,7 @@ export function Sidebar() {
           filtered.map((c) => (
             <Link
               key={String(c.id)}
-              href={`/app/${c.id}`}
+              href={`/${c.id}`}
               className="block p-4 hover:bg-[color:var(--muted)]"
             >
               <div className="text-sm opacity-70">{c.type}</div>

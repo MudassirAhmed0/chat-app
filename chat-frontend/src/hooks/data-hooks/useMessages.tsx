@@ -127,7 +127,6 @@ const useMessages = (conversationId: string) => {
     });
   }
 
-  // 🔥 fix the last `any`
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function notifyTyping(): void {
