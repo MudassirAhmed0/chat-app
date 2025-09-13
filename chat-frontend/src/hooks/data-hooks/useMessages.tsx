@@ -31,9 +31,9 @@ const useMessages = (conversationId: string) => {
     variables: { conversationId },
     fetchPolicy: 'cache-and-network',
   });
-  const clientRequestId = crypto.randomUUID;
   const [send] = useSendMessageMutation({
     optimisticResponse: (vars, { IGNORE }) => {
+      const clientRequestId = crypto.randomUUID();
       const tempId = 'temp-' + clientRequestId;
 
       // Build the optimistic payload with correct, explicit types
@@ -42,6 +42,7 @@ const useMessages = (conversationId: string) => {
         sendMessage: {
           __typename: 'MessageModel',
           id: tempId,
+          clientRequestId,
           conversationId,
           content: vars.input.content,
           type: vars.input.type ?? MessageType.Text,
@@ -71,7 +72,6 @@ const useMessages = (conversationId: string) => {
       document: OnMessageAddedDocument,
       variables: { conversationId },
       updateQuery: (prev, { subscriptionData }) => {
-        console.log(prev, conversationId, subscriptionData, 'madarchod');
         const msg = subscriptionData.data?.messageAdded;
         if (!msg) return prev;
         // (Optional chaining if codegen made things nullable)
@@ -115,7 +115,23 @@ const useMessages = (conversationId: string) => {
 
   async function loadMore() {
     if (!hasNextPage || !nextCursor) return;
-    await fetchMore({ variables: { conversationId, cursor: nextCursor } });
+    await fetchMore({
+      variables: { conversationId, cursor: nextCursor },
+      updateQuery: (prev, { fetchMoreResult }) => {
+        if (!fetchMoreResult?.listMessages) return prev;
+
+        const newItems = [...prev.listMessages.items, ...fetchMoreResult.listMessages.items];
+
+        const newResults = {
+          ...fetchMoreResult,
+          listMessages: {
+            ...fetchMoreResult.listMessages,
+            items: [...newItems],
+          },
+        };
+        return { ...newResults };
+      },
+    });
   }
 
   const typingTimer = useRef<any>(null);

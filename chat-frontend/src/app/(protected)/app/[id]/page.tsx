@@ -13,7 +13,7 @@ export default function ChatPage() {
   const { items, sendMessage, loadMore, hasNextPage, notifyTyping, myId } =
     useMessages(conversationId);
   const [typingText, setTypingText] = useState<string | undefined>();
-
+  console.log(items);
   // (Simple) show "Someone is typing…" for 2s whenever we get a typing event via cache (see hook wiring)
   // In a full version, subscribeToMore handler would set this.
   // For now this is updated by useMessages' SUB_TYPING_STARTED (you can expand it to show specific username).
