@@ -1,23 +1,20 @@
 'use client';
 import {
-  ListMessagesDocument,
   MessageType,
   type ReactionModel,
-  SendMessageMutation,
+  type SendMessageMutation,
   useListMessagesQuery,
   useSendMessageMutation,
-  type MessageModel,
-  type UserModel,
+  type OnMessageAddedSubscription,
+  type OnMessageAddedSubscriptionVariables,
+  type ListMessagesQuery,
+  OnMessageAddedDocument,
   useMarkReadMutation,
   useAddReactionMutation,
   useRemoveReactionMutation,
   useSendTypingMutation,
-  OnMessageAddedDocument,
-  OnMessageAddedSubscription,
-  OnMessageAddedSubscriptionVariables,
-  ListMessagesQuery,
-  OnMessageUpdatedDocument,
-  OnTypingStartedDocument,
+  // OnMessageUpdatedDocument,   // <- remove until you actually use
+  // OnTypingStartedDocument,    // <- remove until you actually use
 } from '@/gql/graphql';
 import { useAuthStore } from '@/store/auth';
 import { useEffect, useRef } from 'react';
@@ -27,16 +24,19 @@ import { loadErrorMessages, loadDevMessages } from '@apollo/client/dev';
 const useMessages = (conversationId: string) => {
   const myId = useAuthStore((s) => s.user?.id);
   if (!myId) throw new Error('myId is required for optimistic sender');
-  const { data, loading, error, subscribeToMore, fetchMore } = useListMessagesQuery({
+
+  // drop `error` from destructure since it's unused
+  const { data, loading, subscribeToMore, fetchMore } = useListMessagesQuery({
     variables: { conversationId },
     fetchPolicy: 'cache-and-network',
   });
+
   const [send] = useSendMessageMutation({
-    optimisticResponse: (vars, { IGNORE }) => {
+    // remove the unused IGNORE param
+    optimisticResponse: (vars) => {
       const clientRequestId = crypto.randomUUID();
       const tempId = 'temp-' + clientRequestId;
 
-      // Build the optimistic payload with correct, explicit types
       const optimistic: SendMessageMutation = {
         __typename: 'Mutation',
         sendMessage: {
@@ -48,8 +48,7 @@ const useMessages = (conversationId: string) => {
           type: vars.input.type ?? MessageType.Text,
           createdAt: new Date(),
           sender: { __typename: 'UserModel', id: myId, username: 'you' },
-          // Avoid never[] by typing the empty array
-          reactions: [] as Array<ReactionModel>,
+          reactions: [] as ReactionModel[],
         },
       };
 
@@ -57,6 +56,7 @@ const useMessages = (conversationId: string) => {
     },
   });
 
+  // const { useMarkReadMutation, useAddReactionMutation, useRemoveReactionMutation, useSendTypingMutation } = await import('@/gql/graphql'); // if these were already imported, keep them; this is just illustrative
   const [markRead] = useMarkReadMutation();
   const [addReaction] = useAddReactionMutation();
   const [removeReaction] = useRemoveReactionMutation();
@@ -65,47 +65,41 @@ const useMessages = (conversationId: string) => {
   useEffect(() => {
     loadDevMessages();
     loadErrorMessages();
-    const unsub1 = subscribeToMore<
-      OnMessageAddedSubscription, // <-- subscription result
-      OnMessageAddedSubscriptionVariables // <-- subscription variables
-    >({
-      document: OnMessageAddedDocument,
-      variables: { conversationId },
-      updateQuery: (prev, { subscriptionData }) => {
-        const msg = subscriptionData.data?.messageAdded;
-        if (!msg) return prev;
-        // (Optional chaining if codegen made things nullable)
-        const items = prev.listMessages?.items ?? [];
-        const tempIdx = items.findIndex(
-          (m) => m?.clientRequestId && m?.clientRequestId === msg?.clientRequestId,
-        );
-        if (items.some((m) => m.id === msg.id)) return prev;
 
-        return {
-          ...prev,
-          listMessages: {
-            ...prev.listMessages,
-            items: [msg, ...items], // prepend (we show newest first)
-            pageInfo: prev.listMessages?.pageInfo ?? { hasNextPage: false, nextCursor: null },
-          },
-        } as ListMessagesQuery;
+    const unsub1 = subscribeToMore<OnMessageAddedSubscription, OnMessageAddedSubscriptionVariables>(
+      {
+        document: OnMessageAddedDocument,
+        variables: { conversationId },
+        updateQuery: (prev, { subscriptionData }) => {
+          const msg = subscriptionData.data?.messageAdded;
+          if (!msg) return prev;
+
+          const items = prev.listMessages?.items ?? [];
+
+          // de-dup by id or clientRequestId
+          if (
+            items.some(
+              (m) =>
+                m.id === msg.id || (m.clientRequestId && m.clientRequestId === msg.clientRequestId),
+            )
+          ) {
+            return prev;
+          }
+
+          return {
+            ...prev,
+            listMessages: {
+              ...prev.listMessages,
+              items: [msg, ...items],
+              pageInfo: prev.listMessages?.pageInfo ?? { hasNextPage: false, nextCursor: null },
+            },
+          } as ListMessagesQuery;
+        },
       },
-    });
+    );
 
-    // const unsub2 = subscribeToMore({
-    //   document: OnMessageUpdatedDocument,
-    //   variables: { conversationId },
-    //   updateQuery: (prev) => prev,
-    // });
-    // const unsub3 = subscribeToMore({
-    //   document: OnTypingStartedDocument,
-    //   variables: { conversationId },
-    //   updateQuery: (prev) => prev,
-    // });
     return () => {
       unsub1();
-      // unsub2();
-      // unsub3();
     };
   }, [conversationId, subscribeToMore]);
 
@@ -113,7 +107,7 @@ const useMessages = (conversationId: string) => {
   const hasNextPage = data?.listMessages?.pageInfo?.hasNextPage;
   const nextCursor = data?.listMessages?.pageInfo?.nextCursor;
 
-  async function loadMore() {
+  async function loadMore(): Promise<void> {
     if (!hasNextPage || !nextCursor) return;
     await fetchMore({
       variables: { conversationId, cursor: nextCursor },
@@ -122,23 +116,26 @@ const useMessages = (conversationId: string) => {
 
         const newItems = [...prev.listMessages.items, ...fetchMoreResult.listMessages.items];
 
-        const newResults = {
+        return {
           ...fetchMoreResult,
           listMessages: {
             ...fetchMoreResult.listMessages,
-            items: [...newItems],
+            items: newItems,
           },
         };
-        return { ...newResults };
       },
     });
   }
 
-  const typingTimer = useRef<any>(null);
-  function notifyTyping() {
-    if (typingTimer.current) return null;
-    typingTimer.current = setTimeout(() => (typingTimer.current = null), 2000);
-    sendTyping({ variables: { conversationId } }).catch(() => {});
+  // 🔥 fix the last `any`
+  const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function notifyTyping(): void {
+    if (typingTimer.current) return;
+    typingTimer.current = setTimeout(() => {
+      typingTimer.current = null;
+    }, 2000);
+    void sendTyping({ variables: { conversationId } }).catch(() => {});
   }
 
   return {

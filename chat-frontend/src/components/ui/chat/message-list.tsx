@@ -1,10 +1,32 @@
 'use client';
+import * as React from 'react';
+import type { ReactNode } from 'react';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+type UserRef =
+  | {
+      id: string;
+      username?: string | null;
+    }
+  | null
+  | undefined;
+
+export interface ChatMessageLike {
+  id: string | number;
+  sender?: UserRef;
+  content: ReactNode; // allow rich content
+  createdAt: string | number | Date; // normalize when rendering
+}
+
+interface BubbleProps {
+  me: string;
+  message: ChatMessageLike;
+}
+
 type Props = {
   me: string;
-  items: any[]; // DESC: newest -> oldest
+  items: ChatMessageLike[]; // DESC: newest -> oldest
   onLoadMore: () => Promise<void> | void; // can be sync or async
   hasNextPage?: boolean;
 };
@@ -44,15 +66,15 @@ export function MessageList({ me, items, onLoadMore, hasNextPage }: Props) {
   return (
     <div className="flex-1 min-h-0">
       {ordered.length > 0 && (
-        <Virtuoso
-          ref={virtuosoRef as any}
+        <Virtuoso<ChatMessageLike>
+          ref={virtuosoRef}
           data={ordered}
           firstItemIndex={firstItemIndex}
           // start at bottom on first mount
           initialTopMostItemIndex={ordered.length ? ordered.length - 1 : 0}
           followOutput={atBottom ? 'smooth' : false}
           atBottomStateChange={setAtBottom}
-          computeItemKey={(i, m: any) => String(m.id)}
+          computeItemKey={(_, m) => String(m.id)}
           components={{ Header: loadingTopRef.current ? Header : undefined }}
           startReached={async () => {
             if (!hasNextPage || loadingTopRef.current) return;
@@ -61,7 +83,7 @@ export function MessageList({ me, items, onLoadMore, hasNextPage }: Props) {
             await onLoadMore(); // can be sync/async
             // after this resolves, the effect above adjusts firstItemIndex by delta
           }}
-          itemContent={(index, m: any) => <Bubble me={me} message={m} />}
+          itemContent={(_, m) => <Bubble me={me} message={m} />}
           className="h-full"
         />
       )}
@@ -69,22 +91,29 @@ export function MessageList({ me, items, onLoadMore, hasNextPage }: Props) {
   );
 }
 
-function Bubble({ me, message }: { me: string; message: any }) {
+function Bubble({ me, message }: BubbleProps) {
   const mine = message.sender?.id === me || String(message.id).startsWith('temp-');
+
+  const created =
+    message.createdAt instanceof Date ? message.createdAt : new Date(message.createdAt);
+
+  const timeText = Number.isNaN(created.getTime())
+    ? ''
+    : created.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
   return (
     <div className={`px-4 py-1 flex ${mine ? 'justify-end' : 'justify-start'}`}>
       <div
         className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm shadow-sm
         ${mine ? 'bg-[--primary] text-[--primary-foreground]' : 'bg-[color:var(--muted)]'}`}
       >
-        {!mine && <div className="text-xs opacity-70 mb-0.5">{message.sender?.username}</div>}
+        {!mine && message.sender?.username ? (
+          <div className="text-xs opacity-70 mb-0.5">{message.sender.username}</div>
+        ) : null}
+
         <div>{message.content}</div>
-        <div className="text-[10px] opacity-70 mt-1 text-right">
-          {new Date(message.createdAt).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-        </div>
+
+        {timeText && <div className="text-[10px] opacity-70 mt-1 text-right">{timeText}</div>}
       </div>
     </div>
   );
