@@ -6,7 +6,7 @@ export default function HomePage() {
   const { data, loading, error } = useHealthQuery();
   return (
     <main className="container py-20">
-      <h1 className="text-3xl font-bold mb-4">Chat App</h1>
+      <h1 className="text-3xl font-bold mb-4">Chat App </h1>
       {loading && <p>Checking backend…</p>}
       {error && <p className="text-red-600">Failed: {error.message}</p>}
       {data && (

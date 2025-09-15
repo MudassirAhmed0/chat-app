@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    env:
+      NODE_ENV: test
+      NEXT_PUBLIC_API_URL: http://localhost:4000/graphql
+      NEXT_PUBLIC_WS_URL: ws://localhost:4000/graphql
+      JWT_ACCESS_SECRET: test_access
+      JWT_REFRESH_SECRET: test_refresh
+      JWT_ACCESS_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node + npm
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Install deps (workspace)
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint (all packages)
+        run: pnpm -r run lint --if-present
+
+      - name: Typecheck (all packages)
+        run: pnpm -r run typecheck --if-present
+
+      - name: Test (backend)
+        run: pnpm --filter ./chat-backend run  test --if-present
+
+      - name: Build (backend)
+        run: pnpm --filter ./chat-backend  run build
+      - name: Build (frontend)
+        run: pnpm --filter ./chat-frontend  run build
