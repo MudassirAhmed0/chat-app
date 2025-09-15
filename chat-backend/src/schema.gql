@@ -176,6 +176,7 @@ type TypingPayload {
   at: DateTime!
   conversationId: ID!
   userId: ID!
+  username: String!
 }
 
 type UserModel {

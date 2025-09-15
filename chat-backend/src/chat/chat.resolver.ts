@@ -140,7 +140,13 @@ export class ChatResolver {
   @Subscription(() => TypingPayload, {
     filter: (payload: any, variables: { conversationId: string }) =>
       !!payload?.typingStarted && !!variables?.conversationId,
-    resolve: (payload) => payload.typingStarted,
+    resolve: (payload: any) => {
+      const evt = payload.typingStarted;
+      return {
+        ...evt,
+        at: evt.at instanceof Date ? evt.at : new Date(evt.at),
+      };
+    },
   })
   typingStarted(
     @Args('conversationId', { type: () => ID }) conversationId: string,

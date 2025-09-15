@@ -79,11 +79,17 @@ export class ChatService {
       where: {
         conversationId_userId: { conversationId, userId },
       },
+      select: {
+        user: {
+          select: { username: true },
+        },
+      },
     });
+    const username = membership?.user?.username;
     if (!membership)
       throw new ForbiddenException('Not a member of this conversation');
-    //  check if the member exist in membership (you can ensure member through conversationID + userId as we have made it a composite key of membership)
-    // if not throwForbiddenException "Not a member of this conversation"
+
+    return username;
   }
 
   async createConverstaion(
@@ -385,13 +391,15 @@ export class ChatService {
   }
 
   async typingStarted(conversationId: string, userId: string) {
-    await this.ensureMembers(conversationId, userId);
+    const username = await this.ensureMembers(conversationId, userId);
     await this.pubSub.publish(topicTypingStarted(conversationId), {
       typingStarted: {
         conversationId,
         userId,
+        username,
         at: new Date(),
       },
     });
+    return true;
   }
 }
