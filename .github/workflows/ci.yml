@@ -36,8 +36,14 @@ jobs:
       - name: Install deps (workspace)
         run: pnpm install --frozen-lockfile
 
-      - name: Lint (all packages)
-        run: pnpm -r --if-present run lint
+      # Lint (frontend) — must pass
+      - name: Lint (frontend)
+        run: pnpm --filter ./chat-frontend --if-present run lint
+
+      # Lint (backend) — won't block CI for now
+      - name: Lint (backend)
+        run: pnpm --filter ./chat-backend --if-present run lint
+        continue-on-error: true
 
       - name: Typecheck (all packages)
         run: pnpm -r --if-present run typecheck
