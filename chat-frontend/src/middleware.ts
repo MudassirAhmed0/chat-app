@@ -5,7 +5,7 @@ export function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
   // Mark routes that should be protected
-  const isProtected = pathname === '/' || pathname.startsWith('/app');
+  const isProtected = pathname === '/' || pathname.startsWith('/chat');
 
   if (!isProtected) return NextResponse.next();
 
@@ -20,4 +20,4 @@ export function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
-export const config = { matcher: ['/', '/app/:path*'] };
+export const config = { matcher: ['/', '/chat/:path*'] };

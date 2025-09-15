@@ -271,6 +271,7 @@ export type TypingPayload = {
   at: Scalars['DateTime']['output'];
   conversationId: Scalars['ID']['output'];
   userId: Scalars['ID']['output'];
+  username: Scalars['String']['output'];
 };
 
 export type UserModel = {
@@ -395,7 +396,7 @@ export type OnTypingStartedSubscriptionVariables = Exact<{
 }>;
 
 
-export type OnTypingStartedSubscription = { __typename?: 'Subscription', typingStarted: { __typename?: 'TypingPayload', conversationId: string, userId: string, at: any } };
+export type OnTypingStartedSubscription = { __typename?: 'Subscription', typingStarted: { __typename?: 'TypingPayload', conversationId: string, userId: string, at: any, username: string } };
 
 
 export const AddReactionDocument = gql`
@@ -984,6 +985,7 @@ export const OnTypingStartedDocument = gql`
     conversationId
     userId
     at
+    username
   }
 }
     `;

@@ -3,5 +3,6 @@ subscription OnTypingStarted($conversationId: ID!) {
     conversationId
     userId
     at
+    username
   }
 }

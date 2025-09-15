@@ -7,6 +7,7 @@ import { useMemo, useState } from 'react';
 import useConversation from '@/hooks/data-hooks/useConversation';
 import { NewChatModal } from './new-chat-modal';
 import type { ChangeEvent } from 'react';
+import { useAuthStore } from '@/store/auth';
 
 type Participant = {
   id: string | number;
@@ -25,6 +26,7 @@ type Conversation = {
 // const { items, loading } = useConversation<Conversation>();
 export function Sidebar() {
   const { items, loading } = useConversation();
+  const myId = useAuthStore((s) => s.user?.id);
   const [q, setQ] = useState('');
   const [open, setOpen] = useState(false);
 
@@ -74,12 +76,12 @@ export function Sidebar() {
           filtered.map((c) => (
             <Link
               key={String(c.id)}
-              href={`/${c.id}`}
+              href={`/chat/${c.id}`}
               className="block p-4 hover:bg-[color:var(--muted)]"
             >
               <div className="text-sm opacity-70">{c.type}</div>
               <div className="font-medium">
-                {c.title ?? c.participants.map((p) => p.username).join(', ')}
+                {c.title ?? c.participants.map((p) => (p.id != myId ? p.username : ''))}
               </div>
               <div className="text-xs opacity-60">{formatWhen(c.updatedAt)}</div>
             </Link>

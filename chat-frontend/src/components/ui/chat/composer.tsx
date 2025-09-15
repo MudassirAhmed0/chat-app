@@ -11,7 +11,7 @@ export function Composer({
   onTyping: () => void;
 }) {
   const [val, setVal] = useState('');
-  const [emojiOpen, setEmojiOpen] = useState(false);
+  // const [emojiOpen, setEmojiOpen] = useState(false);
 
   function submit() {
     const text = val.trim();
@@ -23,14 +23,14 @@ export function Composer({
   return (
     <div className="border-t p-3">
       <div className="flex gap-2 items-end">
-        <button
+        {/* <button
           type="button"
           aria-label="Emoji"
           className="px-2 py-2 rounded-md border hover:bg-[color:var(--muted)]"
           onClick={() => setEmojiOpen((v) => !v)}
         >
           😊
-        </button>
+        </button> */}
 
         <TextareaAutosize
           minRows={1}
@@ -52,12 +52,12 @@ export function Composer({
         <Button onClick={submit}>Send</Button>
       </div>
 
-      {emojiOpen && (
+      {/* {emojiOpen && (
         <div className="mt-2 text-sm opacity-70">
-          {/* Placeholder: plug an emoji picker later */}
+         
           Emoji picker goes here…
         </div>
-      )}
+      )} */}
     </div>
   );
 }
