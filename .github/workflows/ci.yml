@@ -37,13 +37,13 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Lint (all packages)
-        run: pnpm -r run lint --if-present
+        run: pnpm -r --if-present run lint
 
       - name: Typecheck (all packages)
-        run: pnpm -r run typecheck --if-present
+        run: pnpm -r --if-present run typecheck
 
       - name: Test (backend)
-        run: pnpm --filter ./chat-backend run  test --if-present
+        run: pnpm --filter ./chat-backend --if-present run  test
 
       - name: Build (backend)
         run: pnpm --filter ./chat-backend  run build
